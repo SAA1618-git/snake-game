@@ -7,21 +7,22 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v2
+
+      - name: Accept Android SDK Licenses
+        run: yes | sdkmanager --licenses || true
 
       - name: Build with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         with:
           workdir: .
-          buildozer_version: master
-          command: buildozer android debug
+          command: android debug
+          buildozer-version: master
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         with:
           name: snake-apk
           path: bin/*.apk
+
