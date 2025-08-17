@@ -1,4 +1,4 @@
-name: Build Android APK
+debuggoidoidoid: Build Android APK
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
         uses: ArtemSBulgakov/buildozer-action@v1
         with:
           workdir: .
-          command: android debug
+          command: -v android debug
           buildozer_version: master
 
       - uses: actions/upload-artifact@v4
