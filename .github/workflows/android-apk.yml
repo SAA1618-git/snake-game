@@ -19,10 +19,9 @@ jobs:
         with:
           workdir: .
           command: android debug
-          buildozer-version: master
+          buildozer_version: master
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         with:
           name: snake-apk
           path: bin/*.apk
-
