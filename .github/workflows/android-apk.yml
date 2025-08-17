@@ -1,27 +1,56 @@
-name: Build Android APK
+name: Android APK (Buildozer)
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false  # کاهش هشدار extraheader
 
-      - name: Accept Android SDK Licenses
-        run: yes | sdkmanager --licenses || true
+      - name: Restore Buildozer cache (optional but faster)
+        uses: actions/cache@v4
+        with:
+          path: .buildozer_global
+          key: buildozer-global-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-global-${{ runner.os }}-
 
-      - name: Build with Buildozer
+      - name: Build with Buildozer (accept SDK licenses, then build)
+        id: buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         with:
           workdir: .
-          command: -v android debug
-          buildozer_version: master
+          buildozer_version: stable   # 'latest' معتبر نیست؛ 'stable' یا نسخه مشخص بزن. 
+          command: |
+            yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --licenses || true
+            buildozer -v android debug
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: snake-apk
-          path: bin/*.apk
+          name: apk
+          path: ${{ steps.buildozer.outputs.filename }}
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-logs
+          path: .buildozer/**/logs/*.txt
+
